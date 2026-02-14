@@ -1,12 +1,78 @@
 import numpy as np
-from typing import Dict, Optional
+
+
+def apply_readout_error_probs(
+    probs: dict[str, float],
+    p01: float,
+    p10: float,
+) -> dict[str, float]:
+    """
+    Deterministic expected transform for an independent bit-flip readout model:
+      0 -> 1 with prob p01
+      1 -> 0 with prob p10
+
+    Input and output are probability dictionaries over equal-length bitstrings.
+    """
+    if not probs:
+        return {}
+
+    p01 = float(p01)
+    p10 = float(p10)
+    if not (0.0 <= p01 <= 1.0 and 0.0 <= p10 <= 1.0):
+        raise ValueError("p01 and p10 must be in [0, 1]")
+
+    keys = list(probs.keys())
+    n = len(keys[0])
+    if n < 1:
+        raise ValueError("bitstrings must be non-empty")
+
+    for k in keys:
+        if len(k) != n or any(ch not in ("0", "1") for ch in k):
+            raise ValueError(
+                "all keys must be equal-length bitstrings containing only 0/1"
+            )
+
+    # Enumerate the full bitstring space for stable alignment.
+    all_bs = [format(i, f"0{n}b") for i in range(2**n)]
+    out: dict[str, float] = {b: 0.0 for b in all_bs}
+
+    for src_bs, ps in probs.items():
+        ps = float(ps)
+        if ps == 0.0:
+            continue
+        if ps < 0.0:
+            raise ValueError("probabilities must be non-negative")
+
+        for t in all_bs:
+            pt = 1.0
+            for i in range(n):
+                a = src_bs[i]
+                b = t[i]
+                if a == "0" and b == "0":
+                    pt *= 1.0 - p01
+                elif a == "0" and b == "1":
+                    pt *= p01
+                elif a == "1" and b == "1":
+                    pt *= 1.0 - p10
+                else:  # a == "1" and b == "0"
+                    pt *= p10
+            out[t] += ps * pt
+
+    total = sum(out.values())
+    if total <= 0.0:
+        raise ValueError("invalid input distribution (sum <= 0 after transform)")
+    for k in list(out.keys()):
+        out[k] = out[k] / total
+
+    return out
+
 
 def measure_projective(
     rho: np.ndarray,
     shots: int,
     seed: int = 42,
-    readout_confusion: Optional[np.ndarray] = None
-) -> Dict[str, int]:
+    readout_confusion: np.ndarray | None = None,
+) -> dict[str, int]:
     """
     Sample bitstrings from rho's diagonal (computational basis).
     If readout_confusion is provided, it must be a 2x2 confusion matrix for independent per-qubit readout:
@@ -31,7 +97,7 @@ def measure_projective(
     rng = np.random.default_rng(seed)
     idx = rng.choice(dim, size=shots, p=probs)
 
-    hist: Dict[str, int] = {}
+    hist: dict[str, int] = {}
     for i in idx:
         b = format(int(i), f"0{n_qubits}b")
         hist[b] = hist.get(b, 0) + 1
@@ -52,11 +118,8 @@ def measure_projective(
 
 
 def apply_readout_error(
-    histogram: Dict[str, int],
-    p01: float,
-    p10: float,
-    seed: int = 42
-) -> Dict[str, int]:
+    histogram: dict[str, int], p01: float, p10: float, seed: int = 42
+) -> dict[str, int]:
     """
     Flip bits probabilistically to simulate readout noise (independent per bit):
       0 -> 1 with prob p01
@@ -68,7 +131,7 @@ def apply_readout_error(
         raise ValueError("p01 and p10 must be in [0, 1]")
 
     rng = np.random.default_rng(seed)
-    out: Dict[str, int] = {}
+    out: dict[str, int] = {}
 
     for bitstr, c in histogram.items():
         if c <= 0:

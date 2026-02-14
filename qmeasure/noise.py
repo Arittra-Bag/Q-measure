@@ -1,7 +1,9 @@
-import numpy as np
-from typing import Callable, List
+from collections.abc import Callable
 
-Kraus = List[np.ndarray]
+import numpy as np
+
+Kraus = list[np.ndarray]
+
 
 def kraus_depolarizing(p: float) -> Kraus:
     """
@@ -11,16 +13,17 @@ def kraus_depolarizing(p: float) -> Kraus:
     p = float(p)
     if not (0.0 <= p <= 1.0):
         raise ValueError("p must be in [0,1]")
-    I = np.eye(2, dtype=np.complex128)
+    Id = np.eye(2, dtype=np.complex128)
     X = np.array([[0, 1], [1, 0]], dtype=np.complex128)
     Y = np.array([[0, -1j], [1j, 0]], dtype=np.complex128)
     Z = np.array([[1, 0], [0, -1]], dtype=np.complex128)
 
-    K0 = np.sqrt(1 - p) * I
+    K0 = np.sqrt(1 - p) * Id
     K1 = np.sqrt(p / 3.0) * X
     K2 = np.sqrt(p / 3.0) * Y
     K3 = np.sqrt(p / 3.0) * Z
     return [K0, K1, K2, K3]
+
 
 def kraus_dephasing(p: float) -> Kraus:
     """
@@ -30,11 +33,12 @@ def kraus_dephasing(p: float) -> Kraus:
     p = float(p)
     if not (0.0 <= p <= 1.0):
         raise ValueError("p must be in [0,1]")
-    I = np.eye(2, dtype=np.complex128)
+    Id = np.eye(2, dtype=np.complex128)
     Z = np.array([[1, 0], [0, -1]], dtype=np.complex128)
-    K0 = np.sqrt(1 - p) * I
+    K0 = np.sqrt(1 - p) * Id
     K1 = np.sqrt(p) * Z
     return [K0, K1]
+
 
 def kraus_amplitude_damping(gamma: float) -> Kraus:
     """
@@ -47,23 +51,29 @@ def kraus_amplitude_damping(gamma: float) -> Kraus:
     K1 = np.array([[0, np.sqrt(g)], [0, 0]], dtype=np.complex128)
     return [K0, K1]
 
+
 def apply_kraus(rho: np.ndarray, K: Kraus) -> np.ndarray:
     """
-    Apply Kraus operators to density matrix:
-      rho' = Σ_k K_k rho K_k†
+    Apply Kraus operators to a density matrix:
+      rho' = sum_k K_k rho K_k^dagger
     """
     out = np.zeros_like(rho, dtype=np.complex128)
     for A in K:
         out += A @ rho @ A.conj().T
     return out
 
-def compose_channels(channels: List[Callable[[np.ndarray], np.ndarray]]) -> Callable[[np.ndarray], np.ndarray]:
+
+def compose_channels(
+    channels: list[Callable[[np.ndarray], np.ndarray]],
+) -> Callable[[np.ndarray], np.ndarray]:
     """
     Compose a list of channel functions: f(g(h(rho))).
     """
+
     def _f(rho: np.ndarray) -> np.ndarray:
         out = rho
         for ch in channels:
             out = ch(out)
         return out
+
     return _f

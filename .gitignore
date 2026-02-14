@@ -1,2 +1,7 @@
 outputs/
 __pycache__/
+.vscode/
+.tmp/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/

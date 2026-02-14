@@ -1,13 +1,13 @@
-# Q-MEASURE — Uncertainty & Calibration Lab for Noisy Measurement Systems
+# Q-MEASURE: Uncertainty and Calibration Lab for Noisy Measurement Systems
 
 Q-MEASURE is a Python toolkit for simulating probabilistic state evolution under measurement collapse and configurable noise channels, with Monte Carlo uncertainty estimates and calibration routines.
 
-> **Positioning:** This is not a “quantum circuit playground.”  
-> It is an **uncertainty + noise diagnostics** framework for partially observed systems.
+> **Positioning:** This is not a quantum circuit playground.
+> It is an uncertainty + noise diagnostics framework for partially observed systems.
 
 ## Why it matters
-- **HFT/Quant:** partial observability, noise propagation, estimator variance, calibration  
-- **AI/ML:** uncertainty quantification, robustness, noisy channels, calibration under shift  
+- **HFT/Quant:** partial observability, noise propagation, estimator variance, calibration
+- **AI/ML:** uncertainty quantification, robustness, noisy channels, calibration under shift
 - **Engineering:** reproducible experiments, report generation, clean APIs
 
 ## Features (MVP)
@@ -33,9 +33,10 @@ cfg = ExperimentConfig(
     n_qubits=2,
     shots=20000,
     noise=[NoiseSpec(kind="dephasing", strength=0.02)],
-    measurement=MeasurementSpec(kind="projective")
+    measurement=MeasurementSpec(kind="projective"),
 )
 
 out = simulate_density(cfg, circuit_fn=bell_circuit)
 print(out["histogram"])
 ```
+
