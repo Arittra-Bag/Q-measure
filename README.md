@@ -1,6 +1,5 @@
 # Q-MEASURE: Uncertainty and Calibration Lab for Noisy Measurement Systems
 
----
 ![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/Arittra-Bag/Q-measure?utm_source=oss&utm_medium=github&utm_campaign=Arittra-Bag%2FQ-measure&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
 
 Q-MEASURE is a Python toolkit for simulating probabilistic state evolution under measurement collapse and configurable noise channels, with Monte Carlo uncertainty estimates and calibration routines.
